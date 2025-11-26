@@ -118,7 +118,7 @@ export function CarDetails() {
               <img
                 src={image.url}
                 onLoad={ () => handleImageLoad(car.id) }
-                className={`rounded-lg border sm-border-0 sm:rounded-none
+                className={`rounded-lg border sm:border-0 sm:rounded-none
                   ${car.images.length === 1
                     ? "object-contain max-h-[450px] mx-auto"
                     : "w-full object-cover"
