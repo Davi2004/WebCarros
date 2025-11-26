@@ -78,20 +78,21 @@ export function Dashboard() {
     const docRef = doc(db, "cars", itemCar.id)
     await deleteDoc(docRef);
 
-    itemCar.images.map( async(image) => {
-      const  imagePath = `images/${image.uid}/${image.name}`
-      const imageRef = ref(storage, imagePath)
+    const deletePromises = itemCar.images.map((image) => {
+      const imagePath = `images/${image.uid}/${image.name}`;
+      const imageRef = ref(storage, imagePath);
+      return deleteObject(imageRef);
+    });
 
-      try {
-        await deleteObject(imageRef)
-        toast.success("Carro deletado com sucesso!")
-        setCars(cars.filter(car => car.id !== itemCar.id))
-      } catch(err) {
-        toast.error("Erro ao tentar deletar esse carro.")
-        console.log(err)
-      }
-
-    } )
+    try {
+      await Promise.all(deletePromises)
+      setCars(cars.filter(car => car.id !== itemCar.id))
+      toast.success("Carro deletado com sucesso!")
+    } catch(err) {
+      toast.error("Erro ao tentar deletar esse carro.")
+      console.log(err)
+    }
+    
   }
     
   return (

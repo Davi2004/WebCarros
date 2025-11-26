@@ -22,8 +22,15 @@ const schema = z.object({
   km: z.string().nonempty("O Km do carro é obrigatório!!"),
   price: z.string().nonempty("O preço do carro é obrigatório!!"),
   city: z.string().nonempty("A cidade é obrigatória!!"),
-  whatsApp: z.string().min(1, "O WhatsApp é obrigatório!!").refine((value) => /^(\d{11,12})$/.test(value), {
-    message: "Número de whatsApp inválido."
+  whatsApp: z.string().min(1, "O WhatsApp é obrigatório!!").superRefine((value, ctx) => {
+    const numbers = value.replace(/\D/g, "");
+
+    if (numbers.length < 10 || numbers.length > 11) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Número de WhatsApp inválido.",
+      });
+    }
   }),
   description: z.string().nonempty("A descrição é obrigatória!!"),
 })
@@ -123,6 +130,18 @@ export function New() {
     })
     
   }
+
+  function formatPhone(value: string) {
+    const numbers = value.replace(/\D/g, "");
+
+    if (numbers.length === 11) {
+      // celular
+      return numbers.replace(/(\d{2})(\d{5})(\d{4})/, "($1) $2-$3");
+    }
+
+    // fixo
+    return numbers.replace(/(\d{2})(\d{4})(\d{4})/, "($1) $2-$3");
+  }
   
   function onSubmit(data: FormData) {
 
@@ -131,6 +150,8 @@ export function New() {
       return;
     }
 
+    const formattedWhatsApp = formatPhone(data.whatsApp);
+    
     const carListImages = carImages.map( car => {
       return {
         uid: car.uid,
@@ -146,7 +167,7 @@ export function New() {
       year: data.year,
       km: data.km,
       city: data.city,
-      whatsapp: data.whatsApp,
+      whatsapp: formattedWhatsApp,
       description: data.description,
       created: new Date(),
       owner: user?.name,

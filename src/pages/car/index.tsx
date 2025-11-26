@@ -100,15 +100,16 @@ export function CarDetails() {
       
       { car && (
         <Swiper
-          slidesPerView={sliderPerView}
+          slidesPerView={car.images.length === 1 ? 1 : sliderPerView}
           pagination={{ clickable: true }}
           navigation
         >
           {car?.images.map( image => (
-            <SwiperSlide key={image.name}>
+            <SwiperSlide key={image.name} className={car.images.length === 1 ? "flex items-center justify-center" : ""}>
               <div 
-                className='w-full h-72 rounded-lg bg-slate-200'
-                style={{ display: loadImages.includes(car.id) ? "none" : "block"}}
+                className={`w-full h-80 rounded-lg bg-slate-200 ${
+                  loadImages.includes(car.id) ? "hidden" : "block"
+                }`}
               >
                 <div className="flex items-center justify-center h-full">
                   <div className="w-12 h-12 border-4 border-gray-400 border-t-zinc-900 rounded-full animate-spin"></div>
@@ -116,8 +117,13 @@ export function CarDetails() {
               </div>
               <img
                 src={image.url}
-                className="w-full object-cover rounded-lg border sm:border-0 sm:rounded-none"
                 onLoad={ () => handleImageLoad(car.id) }
+                className={`rounded-lg border sm-border-0 sm:rounded-none
+                  ${car.images.length === 1
+                    ? "object-contain max-h-[450px] mx-auto"
+                    : "w-full object-cover"
+                  }
+                `}
                 style={{ display: loadImages.includes(car.id) ? "block" : "none" }}
               />
             </SwiperSlide>
