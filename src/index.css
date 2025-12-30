@@ -1,0 +1,75 @@
+@import "tailwindcss";
+
+body {
+    background-color: #F1F5F9;
+}
+
+/* === Custom arrows Swiper === */
+
+.swiper-button-next,
+.swiper-button-prev {
+  color: white !important;
+  background: rgba(0, 0, 0, 0.65);
+  width: 45px !important;
+  height: 45px !important;
+  border-radius: 9999px !important;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  transition: all 0.25s ease-in-out;
+}
+
+/* Hover bonito */
+.swiper-button-next:hover,
+.swiper-button-prev:hover {
+  background: rgba(0, 0, 0, 0.85);
+  transform: scale(1.07);
+}
+
+.swiper-button-next::after,
+.swiper-button-prev::after {
+  font-size: 18px !important;
+  font-weight: bold;
+}
+
+@media (max-width: 640px) {
+  .swiper-button-next,
+  .swiper-button-prev {
+    width: 36px !important;
+    height: 36px !important;
+    background: rgba(0, 0, 0, 0.55);
+  }
+
+  .swiper-button-next::after,
+  .swiper-button-prev::after {
+    font-size: 14px !important;
+  }
+}
+
+.swiper-pagination-bullet {
+  width: 12px !important;
+  height: 12px !important;
+  background-color: #ffffff !important;
+  border: 1px solid;
+  opacity: 1 !important;
+  transition: all 0.3s ease !important;
+}
+
+.swiper-pagination-bullet-active {
+  background-color: #000 !important;
+  transform: scale(1.6) !important;
+  animation: pulse 0.6s ease-in-out;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.5);
+  }
+  100% {
+    transform: scale(1.4);
+  }
+}
