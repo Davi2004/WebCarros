@@ -12,8 +12,12 @@ import { v4 as uuidV4 } from 'uuid'
 
 import { storage, db } from '../../../services/firebaseConnection'
 import { ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
-import { doc as firestoreDoc, addDoc, setDoc, collection, getDocs, deleteDoc } from 'firebase/firestore'
+import { doc as firestoreDoc, addDoc, collection, deleteDoc, getDoc, updateDoc } from 'firebase/firestore'
 import toast from "react-hot-toast";
+
+import { useNavigate } from "react-router-dom";
+
+import { useParams } from "react-router-dom";
 
 const schema = z.object({
   name: z.string().nonempty("O campo nome é obrigatório!!"),
@@ -51,36 +55,78 @@ export function New() {
     mode: "onChange",
   })
   const [carImages, setCarImages] = useState<ImageItemProps[]>([])
+  const { id } = useParams();
+  const isEdit = !!id;
+  const navigate = useNavigate()
 
   useEffect(() => {
-    async function loadImages() {
-      if (!user?.uid) return;
+    async function loadCar() {
+      if (!id) return;
 
-      const imagesRef = collection(db, "carImages");
-      const querySnapshot = await getDocs(imagesRef);
+      const docRef = firestoreDoc(db, "cars", id);
+      const snapshot = await getDoc(docRef);
 
-      const list: ImageItemProps[] = [];
+      if (!snapshot.exists()) {
+        toast.error("Carro não encontrado");
+        return;
+      }
 
-      querySnapshot.forEach(doc => {
-        const data = doc.data() as ImageItemProps | undefined;
+      const data = snapshot.data();
 
-        if(!data) return;
-        
-        if (data.uid === user.uid) {
-          list.push({
-            uid: data.uid,
-            name: data.name,
-            url: data.url,
-            previewUrl: data.url, // pois aqui já vem a URL final, não a preview
-          });
-        }
+      reset({
+        name: data.name,
+        model: data.model,
+        price: data.price,
+        year: data.year,
+        km: data.km,
+        city: data.city,
+        whatsApp: data.whatsapp,
+        description: data.description,
       });
 
-      setCarImages(list);
+      // imagens já existentes
+      setCarImages(
+        data.images.map((img: any) => ({
+          uid: img.uid,
+          name: img.name,
+          url: img.url,
+          previewUrl: img.url,
+        }))
+      );
     }
 
-    loadImages();
-  }, [user]);  
+    loadCar();
+  }, [id, reset]);
+
+  // useEffect(() => {
+  //   async function loadImages() {
+  //     if (!user?.uid) return;
+
+  //     const imagesRef = collection(db, "carImages");
+  //     const querySnapshot = await getDocs(imagesRef);
+
+  //     const list: ImageItemProps[] = [];
+
+  //     querySnapshot.forEach(doc => {
+  //       const data = doc.data() as ImageItemProps | undefined;
+
+  //       if(!data) return;
+        
+  //       if (data.uid === user.uid) {
+  //         list.push({
+  //           uid: data.uid,
+  //           name: data.name,
+  //           url: data.url,
+  //           previewUrl: data.url, // pois aqui já vem a URL final, não a preview
+  //         });
+  //       }
+  //     });
+
+  //     setCarImages(list);
+  //   }
+
+  //   loadImages();
+  // }, [user]);
 
   async function handleFile(e: ChangeEvent<HTMLInputElement>) {
     if(e.target.files && e.target.files[0]) {
@@ -120,11 +166,11 @@ export function New() {
         setCarImages( (images) => [...images, imageItem] );
         toast.success("Image cadastrada com sucesso!")
 
-        await setDoc(firestoreDoc(db, "carImages", uidImage), {
-          uid: imageItem.uid,
-          name: imageItem.name,
-          url: imageItem.url,
-        });
+        // await setDoc(firestoreDoc(db, "carImages", uidImage), {
+        //   uid: imageItem.uid,
+        //   name: imageItem.name,
+        //   url: imageItem.url,
+        // });
 
       })
     })
@@ -143,7 +189,7 @@ export function New() {
     return numbers.replace(/(\d{2})(\d{4})(\d{4})/, "($1) $2-$3");
   }
   
-  function onSubmit(data: FormData) {
+  async function onSubmit(data: FormData) {
 
     if(carImages.length === 0) {
       toast.error("Envie alguma imagem deste carro!")
@@ -159,8 +205,8 @@ export function New() {
         url: car.url,
       }
     })
-    
-    addDoc(collection(db, "cars"), {
+
+    const carData = {
       name: data.name.toUpperCase(),
       model: data.model,
       price: data.price,
@@ -172,29 +218,33 @@ export function New() {
       created: new Date(),
       owner: user?.name,
       uid: user?.uid,
-      images: carListImages      
-    })
-    .then(async() => {
-      const imagesRef = collection(db, "carImages");
-      const snapshot = await getDocs(imagesRef);
+      images: carListImages
+    }
 
-      const deletePromises = snapshot.docs.map(async (document) => {
-        const data = document.data();
-        if (data.uid === user?.uid) {
-          await deleteDoc(firestoreDoc(db, "carImages", document.id));
-        }
-      });
+    try {
+      if (isEdit) {
+        await updateDoc(firestoreDoc(db, "cars", id!), carData);
+        toast.success("Carro atualizado com sucesso!");
+      } else {
+        // CRIAR carro novo
+        await addDoc(collection(db, "cars"), {
+          ...carData,
+          created: new Date(),
+        });
+        toast.success("Carro cadastrado com sucesso!");
+      }
 
-      await Promise.all(deletePromises);
-      
       reset();
       setCarImages([]);
-      toast.success("Cadastrado com sucesso");
-    })
-    .catch((err) => {
-      toast.error("Erro ao adicionar na coleção")
-      console.log(err)
-    })
+      
+      setTimeout(() => {
+        navigate("/dashboard")
+      }, 1000)
+
+    } catch(err) {
+      toast.error("Erro ao salvar carro")
+      console.log(err);
+    }
   }
 
   async function handleDeleteImage(item: ImageItemProps) {
@@ -349,7 +399,7 @@ export function New() {
             {errors.description && <p className="mb-1 text-red-500 font-medium">{errors.description?.message}</p>}
           </div>
 
-          <button type="submit" className="w-full rounded-md bg-zinc-900 text-white font-medium cursor-pointer h-10"> Cadastrar </button>
+          <button type="submit" className="w-full rounded-md bg-zinc-900 text-white font-medium cursor-pointer h-10"> {isEdit ? "Salvar alterações" : "Cadastrar"} </button>
           
         </form>
       </div>

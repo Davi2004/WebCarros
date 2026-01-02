@@ -2,13 +2,14 @@ import { useEffect, useState, useContext } from "react";
 import { Container } from "../../components/container";
 import { DashboardHeader } from "../../components/painelheader";
 
-import { FiTrash2 } from "react-icons/fi";
+import { FiTrash2, FiEdit2 } from "react-icons/fi";
 import { collection, getDocs, where, query, doc, deleteDoc } from "firebase/firestore";
 import { db, storage } from "../../services/firebaseConnection";
 import { ref, deleteObject } from 'firebase/storage'
 import { AuthContext } from '../../contexts/AuthContext'
 import toast from "react-hot-toast";
 
+import { useNavigate } from "react-router-dom";
 
 interface CarProps {
   id: string;
@@ -31,6 +32,7 @@ export function Dashboard() {
   const [cars, setCars] = useState<CarProps[]>([])
   const [loadImages, setLoadImages] = useState<string[]>([])
   const { user } = useContext(AuthContext)
+  const navigate = useNavigate()
 
   useEffect(() => {
       
@@ -113,7 +115,14 @@ export function Dashboard() {
               </div>
             </div>
             <div className="relative w-full rounded-lg overflow-hidden">
-              <button 
+              <button
+                onClick={() => navigate(`/dashboard/new/${car.id}`)}
+                className="absolute bg-white p-2 rounded-full top-2 left-2 cursor-pointer z-30 peer"
+              >
+                <FiEdit2 size={26} color="#000" />
+              </button>
+              
+              <button
                 onClick={ () => handleDeleteCar(car) }
                 className="absolute bg-white p-2 rounded-full top-2 right-2 cursor-pointer z-30 peer"
               >

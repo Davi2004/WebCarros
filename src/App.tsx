@@ -28,6 +28,10 @@ const router = createBrowserRouter([
         element: <Private> <New/> </Private>
       },
       {
+        path: 'dashboard/new/:id',
+        element: <Private> <New/> </Private>
+      },
+      {
         path: '/',
         element: <Home/>
       },
