@@ -71,7 +71,6 @@ Esse projeto foi desenvolvido com as seguintes tecnologias:
 - ⚛️ **React**
 - 🛠️ **Typescript**
 - 🎨 **TailwindCSS**
-- 🔔 **React Toastify**
 - 🧠 **Firebase** (Auth + Banco de Dados)
 - 🌐 **Firebase Hosting** (Deploy)
 
